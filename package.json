@@ -1,0 +1,49 @@
+{
+  "name": "chatbot-backend",
+  "version": "1.0.0",
+  "description": "A chatbot backend using Node.js, Express.js, MongoDB, and WebSockets.",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon app.js",
+    "dev": "nodemon app.js",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.4",
+    "express": "^4.18.2",
+    "mongoose": "^8.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "socket.io": "^4.7.2",
+    "axios": "^1.6.7",
+    "express-async-errors": "^3.1.1",
+    "express-validator": "^7.0.0",
+    "http-status-codes": "^2.2.0",
+    "mongoose-unique-validator": "^4.0.1",
+    "morgan": "^1.10.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "validator": "^13.9.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "eslint": "^8.55.0",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": "20.18.0"
+  },
+  "keywords": [
+    "chatbot",
+    "nodejs",
+    "express",
+    "mongodb",
+    "websocket"
+  ],
+  "author": "Ahbab Shahin Chowdhury",
+  "license": "MIT"
+}
