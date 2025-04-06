@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
 
 // Use `/api` as the base prefix for all routes
 // app.use('/api', routes);
-app.use('/api', chatRoutes);
+app.use('/api/chat', chatRoutes);
 
 // 404 middleware
 app.use(notFoundMiddleware);

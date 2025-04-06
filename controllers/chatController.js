@@ -2,6 +2,8 @@
 require('dotenv').config();
 const axios = require('axios');
 const Chat = require('../models/Chat');
+const { v4: uuidv4 } = require('uuid');
+
 const personality = `
 You are a moody women. You have a dark sense of humour. 
 And you love to argue for no reason. You are a feminist, and you are independent and no man can tell you do anything. 
@@ -88,34 +90,34 @@ const chatSessions = {}; // Store chat history in-memory
 
 const chat = async (req, res) => {
 	try {
-		const { sessionId, message } = req.body; // Track conversation
-		if (!sessionId || !message) {
-			return res
-				.status(400)
-				.json({
-					success: false,
-					message: 'sessionId and message are required',
-				});
+		const { chatId, message, user } = req.body;
+
+		if (!message || !user) {
+			return res.status(400).json({
+				success: false,
+				message: 'User and message are required',
+			});
 		}
 
-		// Fetch previous conversation from DB
-		let chatHistory = await Chat.findOne({ sessionId });
+		let chatHistory;
+
+		if (chatId) {
+			chatHistory = await Chat.findOne({ chatId, user });
+		}
 
 		if (!chatHistory) {
-			chatHistory = new Chat({ sessionId, messages: [] });
+			chatHistory = new Chat({
+				user,
+				chatId: uuidv4(), // New chat ID if not provided
+				messages: [],
+			});
 		}
 
-		// Add user message to history
-		chatHistory.messages.push({ role: 'user', content: message });
+		chatHistory.messages.push({ role: 'user', user, content: message });
 
-		// Prepare messages for OpenRouter API
-		const openRouterMessages = chatHistory.messages.slice(-10); // Send only last 10 messages for context
-
-		// AI Persona Switching
-		// const systemMessage = Math.random() < 0.5 ? personality : personality2;
+		const openRouterMessages = chatHistory.messages.slice(-10);
 		const systemMessage = personality3;
 
-		// Call OpenRouter API
 		const response = await axios.post(
 			'https://openrouter.ai/api/v1/chat/completions',
 			{
@@ -133,25 +135,92 @@ const chat = async (req, res) => {
 			}
 		);
 
-		// Get AI response
 		const aiMessage =
-		response.data.choices?.[0]?.message?.content ||
-		'No response from AI';
+			response.data.choices?.[0]?.message?.content ||
+			'No response from AI';
 
-		// Save AI response in DB
 		chatHistory.messages.push({ role: 'assistant', content: aiMessage });
 		await chatHistory.save();
 
 		res.status(200).json({
 			success: true,
-			sessionId,
-			body: chatHistory.messages,
+			chatId: chatHistory.chatId,
+			messages: chatHistory.messages,
 		});
 	} catch (error) {
-		console.error('Error fetching AI response:', error.message);
+		console.error('Chat error:', error.message);
 		res.status(500).json({
 			success: false,
-			message: 'Error processing AI response',
+			message: 'Failed to generate AI response',
+			error: error.message,
+		});
+	}
+};
+
+const getAllMessagesByUser = async (req, res) => {
+	try {
+		const { userId } = req.params;
+		console.log('userId: ', userId);
+
+		if (!userId) {
+			return res.status(400).json({
+				success: false,
+				message: 'User ID is required.',
+			});
+		}
+
+		const chats = await Chat.find({ user: userId }).sort({ updatedAt: -1 });
+
+		if (!chats.length) {
+			return res.status(404).json({
+				success: false,
+				message: 'No chat sessions found for this user.',
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			chats,
+		});
+	} catch (error) {
+		console.error('Error fetching messages by user:', error.message);
+		res.status(500).json({
+			success: false,
+			message: 'Failed to fetch messages.',
+			error: error.message,
+		});
+	}
+};
+
+const getChatBySessionId = async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		if (!id) {
+			return res.status(400).json({
+				success: false,
+				message: 'Session ID is required.',
+			});
+		}
+
+		const chat = await Chat.findOne({ chatId:id });
+
+		if (!chat) {
+			return res.status(404).json({
+				success: false,
+				message: 'Chat session not found.',
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			chat,
+		});
+	} catch (error) {
+		console.error('Error fetching chat by session ID:', error.message);
+		res.status(500).json({
+			success: false,
+			message: 'Failed to fetch chat session.',
 			error: error.message,
 		});
 	}
@@ -164,6 +233,8 @@ const chat = async (req, res) => {
 // })();
 
 module.exports = {
-  chat
-}
+	chat,
+	getAllMessagesByUser,
+	getChatBySessionId,
+};
 
