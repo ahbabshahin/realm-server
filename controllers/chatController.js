@@ -180,7 +180,7 @@ const getAllMessagesByUser = async (req, res) => {
 
 		res.status(200).json({
 			success: true,
-			chats,
+			body:chats,
 		});
 	} catch (error) {
 		console.error('Error fetching messages by user:', error.message);
