@@ -1,3 +1,1 @@
-It is going to be a chatbot. 
-We are going to use deepseek R1 model for the bot.
-For backend, we are going to use node express.
+We're embarking on an exciting journey to create a dynamic chatbot. Our foundation will be built upon the advanced deepseek R1 model, which promises to bring the conversation to life. For the backend, we’re harnessing the power of Node.js with Express, ensuring smooth and efficient interactions. Soon, we will introduce engaging conversations that mimic the natural flow between individuals, enhancing the richness of user experiences.
