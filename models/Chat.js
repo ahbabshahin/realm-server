@@ -13,6 +13,7 @@ const chatSchema = new mongoose.Schema(
 	{
 		chatId: { type: String, unique: true, default: uuidv4 },
 		user: { type: String, required: true },
+		bot: {type: String},
 		messages: [messageSchema],
 	},
 	{ timestamps: true }
