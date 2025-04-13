@@ -3,6 +3,11 @@ require('dotenv').config();
 const axios = require('axios');
 const Chat = require('../models/Chat');
 const { v4: uuidv4 } = require('uuid');
+const {
+	Personality_1,
+	Personality_2,
+	Personality_3,
+} = require('../config/constants');
 
 const personality = `
 You are a moody women. You have a dark sense of humour. 
@@ -91,6 +96,7 @@ const chatSessions = {}; // Store chat history in-memory
 const chat = async (req, res) => {
 	try {
 		const { chatId, message, user } = req.body;
+		const system = Personality_3;
 
 		if (!message || !user) {
 			return res.status(400).json({
@@ -109,21 +115,27 @@ const chat = async (req, res) => {
 			chatHistory = new Chat({
 				user,
 				chatId: uuidv4(), // New chat ID if not provided
+				bot: system?.name,
 				messages: [],
 			});
+		} else if (!chatHistory.bot) {
+			chatHistory.bot = system?.name || '';
 		}
 
 		chatHistory.messages.push({ role: 'user', user, content: message });
 
 		const openRouterMessages = chatHistory.messages.slice(-10);
-		const systemMessage = personality3;
 
 		const response = await axios.post(
 			'https://openrouter.ai/api/v1/chat/completions',
 			{
 				model: 'deepseek/deepseek-r1:free',
 				messages: [
-					{ role: 'system', content: systemMessage },
+					{
+						role: 'system',
+						content: system?.personality,
+						user: system?.name,
+					},
 					...openRouterMessages,
 				],
 			},
@@ -139,7 +151,7 @@ const chat = async (req, res) => {
 			response.data.choices?.[0]?.message?.content ||
 			'No response from AI';
 
-		chatHistory.messages.push({ role: 'assistant', content: aiMessage });
+		chatHistory.messages.push({ role: 'assistant', content: aiMessage, user: system?.name });
 		await chatHistory.save();
 
 		res.status(200).json({
